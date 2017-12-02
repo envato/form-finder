@@ -4,6 +4,7 @@
   "description": "A simple form finder",
   "main": "index.js",
   "dependencies": {
+    "cors": "^2.8.4",
     "csvtojson": "^1.1.9",
     "elasticsearch": "^14.0.0",
     "fastify": "^0.35.3",

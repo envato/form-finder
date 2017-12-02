@@ -1,3 +1,4 @@
+const cors = require('cors')
 const pick = require('lodash.pick')
 const fastify = require('fastify')()
 const ELASTICSEARCH = require('elasticsearch')
@@ -21,7 +22,7 @@ const validQueries = {
   thirdApprover: 'Third Approver (if required)',
   finalApprover: 'Final Approver (if required)',
   link: 'Link',
-  typeOfExpense: 'Types of Expenses'
+  typesOfExpenses: 'Types of Expenses'
 }
 
 const search = async (query, opts = {}) => {
@@ -51,6 +52,8 @@ const buildQuery = query => {
     }
   })
 }
+
+fastify.use(cors())
 
 fastify.get('/', async (request, reply) => {
   const results = await search({
