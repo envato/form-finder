@@ -2,14 +2,14 @@ module Main exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onClick)
+import Html.Events exposing (onClick, onInput, on, keyCode)
 import Http exposing (Request)
 import Json.Decode
 import Json.Decode.Pipeline exposing (decode, required)
 
 
 -- Request URL:
--- http://localhost:3000
+-- http://localhost:3000/search/:term
 
 
 validQueries :
@@ -36,9 +36,10 @@ validQueries =
     }
 
 
-formsRequest : Request (List Form)
-formsRequest =
-    Http.get "http://localhost:3000" (Json.Decode.list formDecoder)
+formsRequest : String -> Request (List Form)
+formsRequest term =
+    Http.get ("http://localhost:3000/search/" ++ term)
+        (Json.Decode.list formDecoder)
 
 
 formDecoder : Json.Decode.Decoder Form
@@ -75,6 +76,7 @@ type alias Form =
 type alias Model =
     { forms : List Form
     , error : String
+    , term : String
     }
 
 
@@ -82,6 +84,7 @@ init : ( Model, Cmd Msg )
 init =
     { forms = []
     , error = ""
+    , term = ""
     }
         ! []
 
@@ -94,11 +97,15 @@ type Msg
     = LoadForms
     | GotForms (List Form)
     | ShowError String
+    | OnTerm String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        OnTerm term ->
+            { model | term = term } ! []
+
         ShowError err ->
             { model | error = err } ! []
 
@@ -116,8 +123,20 @@ update msg model =
                                 Err httpErr ->
                                     ShowError (toString httpErr)
                         )
-                        formsRequest
+                        (formsRequest model.term)
                   ]
+
+
+onEnter : Msg -> Attribute Msg
+onEnter msg =
+    let
+        isEnter code =
+            if code == 13 then
+                Json.Decode.succeed msg
+            else
+                Json.Decode.fail "not ENTER"
+    in
+        on "keydown" (Json.Decode.andThen isEnter keyCode)
 
 
 
@@ -128,7 +147,10 @@ view : Model -> Html Msg
 view model =
     viewWrapper
         <| div []
-            [ button [ onClick LoadForms ] [ text "Load Forms" ]
+            [ div []
+                [ input [ type_ "text", placeholder "Search...", onInput OnTerm, onEnter LoadForms ] []
+                ]
+            , button [ onClick LoadForms ] [ text "Search" ]
             , div []
                 [ if List.length model.forms > 0 then
                     div [] (List.map formView model.forms)
@@ -155,7 +177,7 @@ formView form =
         , p [] [ text form.secondApprover ]
         , p [] [ text form.thirdApprover ]
         , p [] [ text form.finalApprover ]
-        , p [] [ text form.link ]
+        , a [ href form.link ] [ text form.link ]
         , p [] [ text form.typesOfExpenses ]
         ]
 
