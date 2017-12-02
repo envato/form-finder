@@ -1,0 +1,29 @@
+{
+  "name": "form-finder",
+  "version": "1.0.0",
+  "description": "A simple form finder",
+  "main": "index.js",
+  "dependencies": {
+    "csvtojson": "^1.1.9",
+    "elasticsearch": "^14.0.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/fraserxu/form-finder.git"
+  },
+  "keywords": [
+    "elm",
+    "form",
+    "elasticsearch"
+  ],
+  "author": "Fraser Xu",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fraserxu/form-finder/issues"
+  },
+  "homepage": "https://github.com/fraserxu/form-finder#readme"
+}
