@@ -1,3 +1,4 @@
+const pick = require('lodash.pick')
 const fastify = require('fastify')()
 const ELASTICSEARCH = require('elasticsearch')
 
@@ -11,8 +12,16 @@ const CLIENT = new ELASTICSEARCH.Client({
   apiVersion: '6.0'
 })
 
-const getIndices = async () => {
-  return CLIENT.cat.indices({ v: true })
+const validQueries = {
+  typeOfForm: 'Type of Form',
+  divisions: 'Divisions/Groups',
+  functions: 'Functions',
+  firstApprover: 'First Approver',
+  secondApprover: 'Second Approver (if required)',
+  thirdApprover: 'Third Approver (if required)',
+  finalApprover: 'Final Approver (if required)',
+  link: 'Link',
+  typeOfExpense: 'Types of Expenses'
 }
 
 const search = async (query, opts = {}) => {
@@ -28,6 +37,21 @@ const search = async (query, opts = {}) => {
 
 const selectData = results => results.hits.hits.map(result => result._source)
 
+const buildQuery = query => {
+  const validKeys = Object.keys(validQueries)
+  const selectedQueries = pick(query, validKeys)
+
+  return Object.keys(selectedQueries).map(queryKey => {
+    return {
+      match: {
+        [validQueries[queryKey]]: {
+          query: selectedQueries[queryKey]
+        }
+      }
+    }
+  })
+}
+
 fastify.get('/', async (request, reply) => {
   const results = await search({
     match_all: {}
@@ -37,10 +61,18 @@ fastify.get('/', async (request, reply) => {
 
 fastify.get('/search/:term', async (request, reply) => {
   const term = request.params.term
+  const must = buildQuery(request.query)
   const results = await search({
-    multi_match: {
-      query: term,
-      fields: ['*']
+    bool: {
+      should: [
+        {
+          multi_match: {
+            query: term,
+            fields: ['*']
+          }
+        }
+      ],
+      must
     }
   })
   reply.send(selectData(results))

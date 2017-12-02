@@ -6,7 +6,8 @@
   "dependencies": {
     "csvtojson": "^1.1.9",
     "elasticsearch": "^14.0.0",
-    "fastify": "^0.35.3"
+    "fastify": "^0.35.3",
+    "lodash.pick": "^4.4.0"
   },
   "devDependencies": {},
   "scripts": {
