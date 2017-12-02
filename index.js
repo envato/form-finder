@@ -1,4 +1,4 @@
-const csv = require('csvtojson')
+const fastify = require('fastify')()
 const ELASTICSEARCH = require('elasticsearch')
 
 const Forms = `${process.env.PWD}/forms.csv`
@@ -11,21 +11,42 @@ const CLIENT = new ELASTICSEARCH.Client({
   apiVersion: '6.0'
 })
 
-csv()
-  .fromFile(Forms)
-  .on('json', obj => {
-    BULK.push({ index: { _index: INDEX, _type: TYPE } }, obj)
-    console.log(`Adding ${obj['Type of Form']} to array`)
-  })
-  .on('end', () => {
-    CLIENT.bulk(
-      {
-        body: BULK
-      },
-      err => {
-        if (err) console.log(err)
-      }
-    )
+const getIndices = async () => {
+  return CLIENT.cat.indices({ v: true })
+}
 
-    console.log('Processing completed')
+const search = async (query, opts = {}) => {
+  return CLIENT.search({
+    index: INDEX,
+    body: {
+      size: opts.size || 20,
+      from: opts.from || 0,
+      query
+    }
   })
+}
+
+const selectData = results => results.hits.hits.map(result => result._source)
+
+fastify.get('/', async (request, reply) => {
+  const results = await search({
+    match_all: {}
+  })
+  reply.send(selectData(results))
+})
+
+fastify.get('/search/:term', async (request, reply) => {
+  const term = request.params.term
+  const results = await search({
+    multi_match: {
+      query: term,
+      fields: ['*']
+    }
+  })
+  reply.send(selectData(results))
+})
+
+fastify.listen(3000, err => {
+  if (err) throw err
+  console.log(`server listening on ${fastify.server.address().port}`)
+})
