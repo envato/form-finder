@@ -7,7 +7,7 @@
     "cors": "^2.8.4",
     "csvtojson": "^1.1.9",
     "elasticsearch": "^14.0.0",
-    "fastify": "^0.35.3",
+    "fastify": "^4.10.2",
     "lodash.pick": "^4.4.0"
   },
   "devDependencies": {},
